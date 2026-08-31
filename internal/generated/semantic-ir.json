@@ -1,8 +1,8 @@
 {
   "schema": "gooo/test-frontier/ir/v1",
   "source_path": "examples/test-frontier.gooo",
-  "source_digest": "sha256:fc7f515b775553d137fa94d9857040510055a78ba34dd98dd378564e4087ab7c",
-  "contract_digest": "sha256:470250e8a056c1b51c295c82f7b8dc82eded8f9963428cd88f88f4ac1fdf4ddd",
+  "source_digest": "sha256:64b79f59a666ef3823f8eb7ee8ac7c56b9527e2af8fae294f417c8d4e11b548c",
+  "contract_digest": "sha256:bf0cb20d2d5fb11f269f05366f895c8441cde5300cc5ce57c4fa4ecc423a4660",
   "meta_activity_count": 12,
   "activities": [
     {
@@ -13,7 +13,7 @@
       "step": "VERIFY_SOURCE_DIGEST",
       "proof_choice": "FOUNDATION",
       "indicator_class": "DRIVER",
-      "source_line": 3
+      "source_line": 4
     },
     {
       "ordinal": 2,
@@ -23,7 +23,7 @@
       "step": "VERIFY_TOOLCHAIN_DIGEST",
       "proof_choice": "FOUNDATION",
       "indicator_class": "DRIVER",
-      "source_line": 4
+      "source_line": 5
     },
     {
       "ordinal": 3,
@@ -33,7 +33,7 @@
       "step": "VERIFY_POLICY_DIGEST",
       "proof_choice": "FOUNDATION",
       "indicator_class": "DRIVER",
-      "source_line": 5
+      "source_line": 6
     },
     {
       "ordinal": 4,
@@ -43,7 +43,7 @@
       "step": "VERIFY_TEST_INVENTORY_DIGEST",
       "proof_choice": "FOUNDATION",
       "indicator_class": "DRIVER",
-      "source_line": 6
+      "source_line": 7
     },
     {
       "ordinal": 5,
@@ -53,7 +53,7 @@
       "step": "VERIFY_SEMANTIC_CHANGE_EDGES",
       "proof_choice": "COHERENCE",
       "indicator_class": "OUTCOME",
-      "source_line": 7
+      "source_line": 8
     },
     {
       "ordinal": 6,
@@ -63,7 +63,7 @@
       "step": "VERIFY_PRIOR_TEST_RECEIPTS",
       "proof_choice": "COHERENCE",
       "indicator_class": "OUTCOME",
-      "source_line": 8
+      "source_line": 9
     },
     {
       "ordinal": 7,
@@ -73,7 +73,7 @@
       "step": "COMPUTE_MINIMAL_INVALIDATION_FRONTIER",
       "proof_choice": "COHERENCE",
       "indicator_class": "GUARDRAIL",
-      "source_line": 9
+      "source_line": 10
     },
     {
       "ordinal": 8,
@@ -83,7 +83,7 @@
       "step": "CLASSIFY_EXECUTED_REUSED_SKIPPED_NOT_OBSERVED",
       "proof_choice": "COHERENCE",
       "indicator_class": "GUARDRAIL",
-      "source_line": 10
+      "source_line": 11
     },
     {
       "ordinal": 9,
@@ -93,7 +93,7 @@
       "step": "VERIFY_COUNTEREXAMPLE_PRESERVATION",
       "proof_choice": "REGRESSION",
       "indicator_class": "OUTCOME",
-      "source_line": 11
+      "source_line": 12
     },
     {
       "ordinal": 10,
@@ -103,7 +103,7 @@
       "step": "COMPARE_EXACT_BEFORE_AFTER_PAIR",
       "proof_choice": "REGRESSION",
       "indicator_class": "OUTCOME",
-      "source_line": 12
+      "source_line": 13
     },
     {
       "ordinal": 11,
@@ -113,7 +113,7 @@
       "step": "ACCOUNT_EXACT_TEST_STATUS_COUNTS",
       "proof_choice": "REGRESSION",
       "indicator_class": "GUARDRAIL",
-      "source_line": 13
+      "source_line": 14
     },
     {
       "ordinal": 12,
@@ -123,7 +123,7 @@
       "step": "EMIT_RECEIPT_AND_HUMAN_REPORT",
       "proof_choice": "REGRESSION",
       "indicator_class": "GUARDRAIL",
-      "source_line": 14
+      "source_line": 15
     }
   ]
 }

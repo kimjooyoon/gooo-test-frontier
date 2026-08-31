@@ -23,14 +23,25 @@ type State string
 type ProofChoice string
 
 type Contract struct {
-	Schema            string         `json:"schema"`
-	DenominatorID     string         `json:"denominator_id"`
-	FixedDenominator  int            `json:"fixed_denominator"`
-	MetaActivityCount int            `json:"meta_activity_count"`
-	StatePrecedence   []State        `json:"state_precedence"`
-	ProofTotals       map[string]int `json:"proof_totals"`
-	IndicatorTotals   map[string]int `json:"indicator_totals"`
-	Cells             []ContractCell `json:"cells"`
+	Schema            string                    `json:"schema"`
+	DenominatorID     string                    `json:"denominator_id"`
+	FixedDenominator  int                       `json:"fixed_denominator"`
+	MetaActivityCount int                       `json:"meta_activity_count"`
+	StatePrecedence   []State                   `json:"state_precedence"`
+	ProofTotals       map[string]int            `json:"proof_totals"`
+	IndicatorTotals   map[string]int            `json:"indicator_totals"`
+	ExternalAuthority ExternalAuthorityContract `json:"external_authority"`
+	Cells             []ContractCell            `json:"cells"`
+}
+
+type ExternalAuthorityContract struct {
+	Provider                    string `json:"provider"`
+	Repository                  string `json:"repository"`
+	ReleaseImmutabilityEndpoint string `json:"release_immutability_endpoint"`
+	ReleaseField                string `json:"release_field"`
+	Required                    bool   `json:"required"`
+	SelfAssertedIsInsufficient  bool   `json:"self_asserted_is_insufficient"`
+	ContradictionReason         string `json:"contradiction_reason"`
 }
 
 type ContractCell struct {
@@ -158,17 +169,18 @@ type Expectations struct {
 }
 
 type Fixture struct {
-	Schema          string              `json:"schema"`
-	CaseID          string              `json:"case_id"`
-	Description     string              `json:"description"`
-	InputBindings   InputBindings       `json:"input_bindings"`
-	Graph           SemanticChangeGraph `json:"semantic_change_graph"`
-	Tests           []TestSpec          `json:"tests"`
-	PriorReceipts   []PriorTestReceipt  `json:"prior_receipts"`
-	Counterexamples []Counterexample    `json:"counterexamples"`
-	EvidenceTiming  EvidenceTiming      `json:"evidence_timing"`
-	PerformancePair *PerformancePair    `json:"performance_pair,omitempty"`
-	Expected        Expectations        `json:"expected"`
+	Schema            string                     `json:"schema"`
+	CaseID            string                     `json:"case_id"`
+	Description       string                     `json:"description"`
+	InputBindings     InputBindings              `json:"input_bindings"`
+	Graph             SemanticChangeGraph        `json:"semantic_change_graph"`
+	Tests             []TestSpec                 `json:"tests"`
+	PriorReceipts     []PriorTestReceipt         `json:"prior_receipts"`
+	Counterexamples   []Counterexample           `json:"counterexamples"`
+	EvidenceTiming    EvidenceTiming             `json:"evidence_timing"`
+	PerformancePair   *PerformancePair           `json:"performance_pair,omitempty"`
+	ExternalAuthority *ExternalAuthorityEvidence `json:"external_authority,omitempty"`
+	Expected          Expectations               `json:"expected"`
 }
 
 type Corpus struct {
@@ -273,6 +285,18 @@ type Authority struct {
 	CrossProjectRequiredGates int `json:"cross_project_required_gates"`
 }
 
+type ExternalAuthorityEvidence struct {
+	Provider                  string `json:"provider"`
+	Repository                string `json:"repository"`
+	Endpoint                  string `json:"endpoint"`
+	ReleaseID                 int64  `json:"release_id"`
+	ReleaseTag                string `json:"release_tag"`
+	SelfAssertedImmutable     bool   `json:"self_asserted_immutable"`
+	PlatformImmutable         bool   `json:"platform_immutable"`
+	ExpectedPlatformImmutable bool   `json:"expected_platform_immutable"`
+	Reason                    string `json:"reason"`
+}
+
 type ArtifactBinding struct {
 	Path   string `json:"path"`
 	Digest string `json:"digest"`
@@ -291,28 +315,30 @@ type Plan struct {
 	Evidence             []EvidenceResult           `json:"evidence"`
 	EvidenceTiming       EvidenceTiming             `json:"evidence_timing"`
 	Economy              EconomyAssessment          `json:"economy"`
+	ExternalAuthority    *ExternalAuthorityEvidence `json:"external_authority,omitempty"`
 	ActivitySummary      ActivitySummary            `json:"activity_summary"`
 	OutputArtifacts      int                        `json:"output_artifacts"`
 	Dossier              string                     `json:"human_dossier"`
 }
 
 type Receipt struct {
-	Schema               string          `json:"schema"`
-	CaseID               string          `json:"case_id"`
-	State                State           `json:"state"`
-	DecisionReason       string          `json:"decision_reason"`
-	Source               ArtifactBinding `json:"source"`
-	SemanticIR           ArtifactBinding `json:"semantic_ir"`
-	GeneratedGo          ArtifactBinding `json:"generated_go"`
-	Evaluator            ArtifactBinding `json:"evaluator"`
-	Contract             ArtifactBinding `json:"contract"`
-	Activities           ActivitySummary `json:"activity_summary"`
-	ExecutionCounts      ExecutionCounts `json:"execution_counts"`
-	InvalidatedEdgeCount int             `json:"invalidated_edge_count"`
-	EvidenceTiming       EvidenceTiming  `json:"evidence_timing"`
-	EconomyState         State           `json:"economy_state"`
-	OutputArtifacts      int             `json:"output_artifacts"`
-	Authority            Authority       `json:"product_authority"`
+	Schema               string                     `json:"schema"`
+	CaseID               string                     `json:"case_id"`
+	State                State                      `json:"state"`
+	DecisionReason       string                     `json:"decision_reason"`
+	Source               ArtifactBinding            `json:"source"`
+	SemanticIR           ArtifactBinding            `json:"semantic_ir"`
+	GeneratedGo          ArtifactBinding            `json:"generated_go"`
+	Evaluator            ArtifactBinding            `json:"evaluator"`
+	Contract             ArtifactBinding            `json:"contract"`
+	Activities           ActivitySummary            `json:"activity_summary"`
+	ExecutionCounts      ExecutionCounts            `json:"execution_counts"`
+	InvalidatedEdgeCount int                        `json:"invalidated_edge_count"`
+	EvidenceTiming       EvidenceTiming             `json:"evidence_timing"`
+	EconomyState         State                      `json:"economy_state"`
+	ExternalAuthority    *ExternalAuthorityEvidence `json:"external_authority,omitempty"`
+	OutputArtifacts      int                        `json:"output_artifacts"`
+	Authority            Authority                  `json:"product_authority"`
 }
 
 type Evaluation struct {

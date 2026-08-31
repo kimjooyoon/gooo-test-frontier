@@ -6,6 +6,15 @@
   "state_precedence": ["REFUTED", "UNKNOWN", "CLOSED"],
   "proof_totals": {"FOUNDATION": 4, "COHERENCE": 4, "REGRESSION": 4},
   "indicator_totals": {"DRIVER": 4, "OUTCOME": 4, "GUARDRAIL": 4},
+  "external_authority": {
+    "provider": "github",
+    "repository": "kimjooyoon/gooo-test-frontier",
+    "release_immutability_endpoint": "repos/kimjooyoon/gooo-test-frontier/immutable-releases",
+    "release_field": "immutable",
+    "required": true,
+    "self_asserted_is_insufficient": true,
+    "contradiction_reason": "SELF_ASSERTED_IMMUTABILITY_CONTRADICTED_BY_PLATFORM"
+  },
   "cells": [
     {"ordinal": 1, "id": "BIND_SOURCE_DIGEST", "activity": "BindSourceDigest", "stage": "BINDING", "step": "VERIFY_SOURCE_DIGEST", "proof_choice": "FOUNDATION", "indicator_class": "DRIVER"},
     {"ordinal": 2, "id": "BIND_TOOLCHAIN_DIGEST", "activity": "BindToolchainDigest", "stage": "BINDING", "step": "VERIFY_TOOLCHAIN_DIGEST", "proof_choice": "FOUNDATION", "indicator_class": "DRIVER"},

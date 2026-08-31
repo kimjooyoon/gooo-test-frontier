@@ -8,7 +8,7 @@ on:
       tag:
         description: "Existing annotated release tag to audit"
         required: true
-        default: "v0.1.0"
+        default: "v0.1.1"
 
 permissions:
   contents: write
@@ -64,9 +64,19 @@ jobs:
         run: |
           set -Eeuo pipefail
           tag="${{ inputs.tag || github.ref_name }}"
+          setting_enabled=$(gh api "repos/${GITHUB_REPOSITORY}/immutable-releases" | jq -r '.enabled')
+          test "$setting_enabled" = true
           gh api "repos/${GITHUB_REPOSITORY}/releases/tags/$tag" > "$RUNNER_TEMP/release.json"
           jq -e --arg tag "$tag" '.tag_name == $tag and (.assets | map(.name) | sort) == (["gooo-test-frontier-" + $tag + ".tar.gz", "release-manifest.json", "SHA256SUMS"] | sort)' "$RUNNER_TEMP/release.json" >/dev/null
           jq -e --arg tag "$tag" --arg commit "$(git rev-parse "$tag^{commit}")" --arg object "$(git ls-remote --refs origin "refs/tags/$tag" | awk 'NR == 1 {print $1}')" '.tag == $tag and .commit_sha == $commit and .tag_object_sha == $object and .immutable == true' "$RUNNER_TEMP/release-manifest.json" >/dev/null
+          platform_immutable=$(jq -r '.immutable' "$RUNNER_TEMP/release.json")
+          if [ "$tag" = "v0.1.0" ]; then
+            test "$platform_immutable" = false
+            echo "SELF_ASSERTED_IMMUTABILITY_CONTRADICTED_BY_PLATFORM: v0.1.0 is preserved as failed evidence" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          test "$platform_immutable" = true
+          echo "external_platform_immutable=true" >> "$GITHUB_STEP_SUMMARY"
           audit_dir="$RUNNER_TEMP/release-audit"
           mkdir -p "$audit_dir"
           gh release download "$tag" --dir "$audit_dir" --clobber
