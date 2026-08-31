@@ -25,3 +25,9 @@ The direct-main commit `7281ead` is recorded as CI-only
 (`.github/workflows/release.yml`) and is not a substantive product mutation.
 A substantive direct-main mutation would be `REFUTED` by the development-
 process gate.
+
+The first v0.1.1 audit run `33398045203` is also retained as a failed
+counterexample: the release was immutable and its assets existed, but the
+Actions token could not download immutable assets through the authenticated
+release-asset endpoint. The audit now uses the public release download URLs
+while still comparing every downloaded digest to the GitHub API asset digest.

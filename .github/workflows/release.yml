@@ -79,8 +79,10 @@ jobs:
           echo "external_platform_immutable=true" >> "$GITHUB_STEP_SUMMARY"
           audit_dir="$RUNNER_TEMP/release-audit"
           mkdir -p "$audit_dir"
-          gh release download "$tag" --dir "$audit_dir" --clobber
           archive="gooo-test-frontier-${tag}.tar.gz"
+          for asset in "$archive" SHA256SUMS release-manifest.json; do
+            curl --fail --location --retry 3 --silent --show-error "https://github.com/${GITHUB_REPOSITORY}/releases/download/$tag/$asset" --output "$audit_dir/$asset"
+          done
           declared_digest="$(awk -v name="$archive" '$2 == name {print $1}' "$audit_dir/SHA256SUMS")"
           test "$declared_digest" = "sha256:$(sha256sum "$audit_dir/$archive" | awk '{print $1}')"
           test "sha256:$(sha256sum "$audit_dir/$archive" | awk '{print $1}')" = "$(jq -r '.asset_digest' "$RUNNER_TEMP/release-manifest.json")"
