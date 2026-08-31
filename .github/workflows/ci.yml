@@ -1,0 +1,35 @@
+name: Test frontier conformance
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Set up Go 1.27
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.27.0
+          cache: false
+      - name: Run CI-only conformance and preserve failed attempts
+        env:
+          CI_OUTPUT_ROOT: ${{ runner.temp }}/gooo-test-frontier-${{ github.run_id }}
+        run: bash scripts/ci-conformance.sh
+      - name: Upload receipts, reports, metrics, and counterexamples
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gooo-test-frontier-ci-${{ github.run_id }}
+          path: ${{ runner.temp }}/gooo-test-frontier-${{ github.run_id }}
+          if-no-files-found: error

@@ -1,0 +1,23 @@
+{
+  "schema": "gooo/test-frontier/protocol/v1/denominator/v1",
+  "denominator_id": "test-frontier-v1",
+  "fixed_denominator": 12,
+  "meta_activity_count": 12,
+  "state_precedence": ["REFUTED", "UNKNOWN", "CLOSED"],
+  "proof_totals": {"FOUNDATION": 4, "COHERENCE": 4, "REGRESSION": 4},
+  "indicator_totals": {"DRIVER": 4, "OUTCOME": 4, "GUARDRAIL": 4},
+  "cells": [
+    {"ordinal": 1, "id": "BIND_SOURCE_DIGEST", "activity": "BindSourceDigest", "stage": "BINDING", "step": "VERIFY_SOURCE_DIGEST", "proof_choice": "FOUNDATION", "indicator_class": "DRIVER"},
+    {"ordinal": 2, "id": "BIND_TOOLCHAIN_DIGEST", "activity": "BindToolchainDigest", "stage": "BINDING", "step": "VERIFY_TOOLCHAIN_DIGEST", "proof_choice": "FOUNDATION", "indicator_class": "DRIVER"},
+    {"ordinal": 3, "id": "BIND_POLICY_DIGEST", "activity": "BindPolicyDigest", "stage": "BINDING", "step": "VERIFY_POLICY_DIGEST", "proof_choice": "FOUNDATION", "indicator_class": "DRIVER"},
+    {"ordinal": 4, "id": "BIND_TEST_INVENTORY_DIGEST", "activity": "BindTestInventoryDigest", "stage": "BINDING", "step": "VERIFY_TEST_INVENTORY_DIGEST", "proof_choice": "FOUNDATION", "indicator_class": "DRIVER"},
+    {"ordinal": 5, "id": "BIND_SEMANTIC_CHANGE_GRAPH", "activity": "BindSemanticChangeGraph", "stage": "GRAPH", "step": "VERIFY_SEMANTIC_CHANGE_EDGES", "proof_choice": "COHERENCE", "indicator_class": "OUTCOME"},
+    {"ordinal": 6, "id": "VERIFY_PRIOR_RECEIPTS", "activity": "VerifyImmutablePriorReceipts", "stage": "EVIDENCE", "step": "VERIFY_PRIOR_TEST_RECEIPTS", "proof_choice": "COHERENCE", "indicator_class": "OUTCOME"},
+    {"ordinal": 7, "id": "COMPUTE_INVALIDATION_FRONTIER", "activity": "ComputeMinimalInvalidationFrontier", "stage": "GRAPH", "step": "COMPUTE_MINIMAL_INVALIDATION_FRONTIER", "proof_choice": "COHERENCE", "indicator_class": "GUARDRAIL"},
+    {"ordinal": 8, "id": "CLASSIFY_TEST_ACTIVITIES", "activity": "ClassifyTestActivities", "stage": "TEST", "step": "CLASSIFY_EXECUTED_REUSED_SKIPPED_NOT_OBSERVED", "proof_choice": "COHERENCE", "indicator_class": "GUARDRAIL"},
+    {"ordinal": 9, "id": "VERIFY_COUNTEREXAMPLES", "activity": "VerifyFalseNegativeCounterexamples", "stage": "REGRESSION", "step": "VERIFY_COUNTEREXAMPLE_PRESERVATION", "proof_choice": "REGRESSION", "indicator_class": "OUTCOME"},
+    {"ordinal": 10, "id": "ASSESS_TEST_ECONOMY", "activity": "AssessExactTestEconomy", "stage": "ECONOMY", "step": "COMPARE_EXACT_BEFORE_AFTER_PAIR", "proof_choice": "REGRESSION", "indicator_class": "OUTCOME"},
+    {"ordinal": 11, "id": "ACCOUNT_EXECUTION_STATUSES", "activity": "AccountTestExecutionStatuses", "stage": "OBSERVATION", "step": "ACCOUNT_EXACT_TEST_STATUS_COUNTS", "proof_choice": "REGRESSION", "indicator_class": "GUARDRAIL"},
+    {"ordinal": 12, "id": "EMIT_REPORT_ARTIFACTS", "activity": "EmitTestFrontierReport", "stage": "REPORT", "step": "EMIT_RECEIPT_AND_HUMAN_REPORT", "proof_choice": "REGRESSION", "indicator_class": "GUARDRAIL"}
+  ]
+}

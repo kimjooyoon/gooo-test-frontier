@@ -1,0 +1,54 @@
+name: Immutable test frontier release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Verify annotated tag identity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          tag_object_sha=$(git ls-remote --refs origin "refs/tags/$GITHUB_REF_NAME" | awk 'NR == 1 {print $1}')
+          test -n "$tag_object_sha"
+          test "$(git cat-file -t "$tag_object_sha")" = "tag"
+          test "$(git rev-parse "$tag_object_sha^{commit}")" = "$GITHUB_SHA"
+          echo "tag_object_sha=$tag_object_sha" >> "$GITHUB_STEP_SUMMARY"
+      - name: Build immutable source assets
+        id: asset
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          tag_object_sha=$(git ls-remote --refs origin "refs/tags/$GITHUB_REF_NAME" | awk 'NR == 1 {print $1}')
+          commit_sha=$(git rev-parse HEAD)
+          archive="gooo-test-frontier-${GITHUB_REF_NAME}.tar.gz"
+          git archive --format=tar.gz --prefix="gooo-test-frontier-${GITHUB_REF_NAME}/" "$commit_sha" > "$RUNNER_TEMP/$archive"
+          asset_digest="sha256:$(sha256sum "$RUNNER_TEMP/$archive" | awk '{print $1}')"
+          asset_size=$(wc -c < "$RUNNER_TEMP/$archive" | tr -d ' ')
+          printf '%s  %s\n' "$asset_digest" "$archive" > "$RUNNER_TEMP/SHA256SUMS"
+          jq -S -n --arg tag "$GITHUB_REF_NAME" --arg tag_object_sha "$tag_object_sha" --arg commit_sha "$commit_sha" --arg archive "$archive" --arg asset_digest "$asset_digest" --argjson asset_size "$asset_size" '{schema:"gooo/test-frontier/release-manifest/v1",tag:$tag,tag_object_sha:$tag_object_sha,commit_sha:$commit_sha,archive:$archive,asset_size_bytes:$asset_size,asset_digest:$asset_digest,immutable:true}' > "$RUNNER_TEMP/release-manifest.json"
+          echo "archive=$archive" >> "$GITHUB_OUTPUT"
+      - name: Publish immutable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -Eeuo pipefail
+          gh release create "$GITHUB_REF_NAME" --verify-tag --title "gooo-test-frontier $GITHUB_REF_NAME" --notes "Immutable source asset bound to annotated tag object $(git rev-parse "$GITHUB_REF_NAME")." "$RUNNER_TEMP/${{ steps.asset.outputs.archive }}" "$RUNNER_TEMP/SHA256SUMS" "$RUNNER_TEMP/release-manifest.json"
+      - name: Audit release identity and digests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -Eeuo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${GITHUB_REF_NAME}" > "$RUNNER_TEMP/release.json"
+          jq -e --arg tag "$GITHUB_REF_NAME" '.tag_name == $tag and .target_commitish != "" and .immutable == true' "$RUNNER_TEMP/release.json" >/dev/null
+          cat "$RUNNER_TEMP/release-manifest.json" >> "$GITHUB_STEP_SUMMARY"

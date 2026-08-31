@@ -1,0 +1,7 @@
+{
+  "schema": "gooo/test-frontier/bootstrap/v1",
+  "repository": "kimjooyoon/gooo-test-frontier",
+  "bootstrap_commit": "62d0343",
+  "bootstrap_paths": [".gitignore", "LICENSE", "README.md"],
+  "main_was_bootstrapped_with_exactly_three_files": true
+}
