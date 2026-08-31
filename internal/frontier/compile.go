@@ -31,6 +31,9 @@ func ValidateContract(contract Contract) error {
 	if contract.Schema != ProtocolSchema+"/denominator/v1" || contract.DenominatorID == "" || contract.FixedDenominator != 12 || contract.MetaActivityCount != 12 || len(contract.Cells) != 12 {
 		return errors.New("INVALID_FIXED_DENOMINATOR")
 	}
+	if contract.ExternalAuthority.Provider != "github" || contract.ExternalAuthority.Repository == "" || contract.ExternalAuthority.ReleaseImmutabilityEndpoint == "" || contract.ExternalAuthority.ReleaseField != "immutable" || !contract.ExternalAuthority.Required || !contract.ExternalAuthority.SelfAssertedIsInsufficient || contract.ExternalAuthority.ContradictionReason != "SELF_ASSERTED_IMMUTABILITY_CONTRADICTED_BY_PLATFORM" {
+		return errors.New("INVALID_EXTERNAL_AUTHORITY_CONTRACT")
+	}
 	if len(contract.StatePrecedence) != 3 || contract.StatePrecedence[0] != StateRefuted || contract.StatePrecedence[1] != StateUnknown || contract.StatePrecedence[2] != StateClosed {
 		return errors.New("INVALID_STATE_PRECEDENCE")
 	}
@@ -240,6 +243,14 @@ func ValidateFixture(fixture Fixture) error {
 			if snapshot.BuildWallMS < 0 || snapshot.TestWallMS < 0 || snapshot.ConformanceWallMS < 0 || snapshot.PeakRSSKiB <= 0 {
 				return errors.New("INVALID_PERFORMANCE_SNAPSHOT_METRICS")
 			}
+		}
+	}
+	if authority := fixture.ExternalAuthority; authority != nil {
+		if authority.Provider != "github" || authority.Repository == "" || authority.Endpoint == "" || authority.ReleaseID <= 0 || authority.ReleaseTag == "" || authority.Reason == "" {
+			return errors.New("INVALID_EXTERNAL_AUTHORITY_EVIDENCE")
+		}
+		if authority.ExpectedPlatformImmutable && authority.SelfAssertedImmutable && !authority.PlatformImmutable && authority.Reason != "SELF_ASSERTED_IMMUTABILITY_CONTRADICTED_BY_PLATFORM" {
+			return errors.New("INVALID_EXTERNAL_AUTHORITY_CONTRADICTION_REASON")
 		}
 	}
 	if fixture.Expected.State != StateClosed && fixture.Expected.State != StateUnknown && fixture.Expected.State != StateRefuted {

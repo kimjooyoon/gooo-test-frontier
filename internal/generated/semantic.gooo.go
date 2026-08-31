@@ -4,11 +4,11 @@ package generated
 
 const ProtocolSchema = "gooo/test-frontier/protocol/v1"
 const SourcePath = "examples/test-frontier.gooo"
-const SourceDigest = "sha256:fc7f515b775553d137fa94d9857040510055a78ba34dd98dd378564e4087ab7c"
+const SourceDigest = "sha256:64b79f59a666ef3823f8eb7ee8ac7c56b9527e2af8fae294f417c8d4e11b548c"
 const SemanticIRPath = "internal/generated/semantic-ir.json"
-const SemanticIRDigest = "sha256:5bffb462e9104cd0c1a23d6472d2f62cb702b5cb56dd39432dabd0b5d51e13f4"
+const SemanticIRDigest = "sha256:75d8490e30e3c0e1e4be1e84d51cb0e7240fe23b9ef5ad20f7a78cc89be26408"
 const ContractPath = "contracts/test-frontier-denominator-v1.json"
-const ContractDigest = "sha256:470250e8a056c1b51c295c82f7b8dc82eded8f9963428cd88f88f4ac1fdf4ddd"
+const ContractDigest = "sha256:bf0cb20d2d5fb11f269f05366f895c8441cde5300cc5ce57c4fa4ecc423a4660"
 const MetaActivityCount = 12
 
 type Activity struct {

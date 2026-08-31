@@ -59,6 +59,13 @@ func renderDossier(plan Plan, fixture Fixture) string {
 	for _, evidence := range plan.Evidence {
 		fmt.Fprintf(&builder, "- `%s` / `%s`: valid=%t — %s.\n", evidence.TestID, evidence.ReceiptID, evidence.Valid, evidence.Reason)
 	}
+	if plan.ExternalAuthority != nil {
+		authority := plan.ExternalAuthority
+		builder.WriteString("\n## External authority\n\n")
+		fmt.Fprintf(&builder, "- Provider: `%s`; repository: `%s`; endpoint: `%s`; release: `%s` (ID `%d`).\n", authority.Provider, authority.Repository, authority.Endpoint, authority.ReleaseTag, authority.ReleaseID)
+		fmt.Fprintf(&builder, "- Self-asserted immutable=`%t`; platform immutable=`%t`; required platform immutable=`%t`.\n", authority.SelfAssertedImmutable, authority.PlatformImmutable, authority.ExpectedPlatformImmutable)
+		fmt.Fprintf(&builder, "- Authority result: **%s** — %s.\n", StateRefuted, authority.Reason)
+	}
 	builder.WriteString("\n## Exact test economy\n\n")
 	fmt.Fprintf(&builder, "Economy state: **%s** — %s.\n\n", plan.Economy.State, plan.Economy.Reason)
 	if len(plan.Economy.Comparisons) > 0 {

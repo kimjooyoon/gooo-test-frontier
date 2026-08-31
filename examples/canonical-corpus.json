@@ -12,6 +12,7 @@
     {"ordinal": 6, "case_id": "unknown-unobserved-execution", "path": "fixtures/cases/unknown-unobserved-execution.json", "state": "UNKNOWN"},
     {"ordinal": 7, "case_id": "refuted-false-negative", "path": "fixtures/cases/refuted-false-negative.json", "state": "REFUTED"},
     {"ordinal": 8, "case_id": "refuted-counterexample-replay", "path": "fixtures/cases/refuted-counterexample-replay.json", "state": "REFUTED"},
-    {"ordinal": 9, "case_id": "refuted-priority", "path": "fixtures/cases/refuted-priority.json", "state": "REFUTED"}
+    {"ordinal": 9, "case_id": "refuted-priority", "path": "fixtures/cases/refuted-priority.json", "state": "REFUTED"},
+    {"ordinal": 10, "case_id": "refuted-platform-immutability", "path": "fixtures/cases/refuted-platform-immutability.json", "state": "REFUTED"}
   ]
 }

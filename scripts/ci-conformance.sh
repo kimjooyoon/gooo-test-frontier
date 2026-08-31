@@ -67,7 +67,7 @@ phase conformance-b /usr/bin/time -f '%e %M' -o "$conformance_time-b" "$binary" 
 phase deterministic-plan diff -ru "$output_root/conformance-a" "$output_root/conformance-b"
 phase artifact-audit bash -c '
 	set -Eeuo pipefail
-	test "$(find "$1" -type f -name receipt.json | wc -l | tr -d " ")" -eq 9
+	test "$(find "$1" -type f -name receipt.json | wc -l | tr -d " ")" -eq 10
 	test -f "$1/conformance-index.json"
 	jq -e ".states.CLOSED >= 3 and .states.UNKNOWN >= 3 and .states.REFUTED >= 3" "$1/conformance-index.json" >/dev/null
 	for case_dir in "$1"/*; do
@@ -78,6 +78,8 @@ phase artifact-audit bash -c '
 		jq -e ".execution_counts.total == (.execution_counts.executed + .execution_counts.reused + .execution_counts.skipped + .execution_counts.not_observed) and .product_authority == {repository_writes:0,local_test_executions:0,cross_project_required_gates:0}" "$case_dir/receipt.json" >/dev/null
 		jq -e "all(.activities[]; .state != \"UNKNOWN\" or (.unknown.stage != \"\" and .unknown.step != \"\" and .unknown.reason != \"\" and .unknown.unknown_class != \"\" and .unknown.next_operation != \"\" and (.unknown.blocked_by|length) > 0))" "$case_dir/plan.json" >/dev/null
 	done
+	jq -e ".state == \"REFUTED\" and .economy_state == \"REFUTED\" and .external_authority.platform_immutable == false and .external_authority.expected_platform_immutable == true" "$1/refuted-platform-immutability/receipt.json" >/dev/null
+	jq -e ".activities[8].state == \"REFUTED\" and .activities[8].reason == \"SELF_ASSERTED_IMMUTABILITY_CONTRADICTED_BY_PLATFORM\"" "$1/refuted-platform-immutability/plan.json" >/dev/null
 ' _ "$output_root/conformance-a"
 phase repository-audit bash -c 'test -z "$(git status --porcelain --untracked-files=all)"'
 

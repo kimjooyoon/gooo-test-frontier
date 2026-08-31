@@ -36,7 +36,7 @@ func EvaluateFixture(fixture Fixture, inputDigest string, source, semanticIR, ge
 		Schema: PlanSchema, CaseID: fixture.CaseID, State: state, DecisionReason: reason,
 		Activities: activities, Tests: testDecisions, InvalidationFrontier: frontierEdges,
 		InvalidatedEdgeCount: len(frontierEdges), ExecutionCounts: counts, Evidence: evidence,
-		EvidenceTiming: fixture.EvidenceTiming, Economy: economy, ActivitySummary: activitySummary,
+		EvidenceTiming: fixture.EvidenceTiming, Economy: economy, ExternalAuthority: fixture.ExternalAuthority, ActivitySummary: activitySummary,
 		OutputArtifacts: 3,
 	}
 	plan.Dossier = renderDossier(plan, fixture)
@@ -44,7 +44,7 @@ func EvaluateFixture(fixture Fixture, inputDigest string, source, semanticIR, ge
 		Schema: ReceiptSchema, CaseID: fixture.CaseID, State: state, DecisionReason: reason,
 		Source: source, SemanticIR: semanticIR, GeneratedGo: generatedGo, Evaluator: evaluator, Contract: contract,
 		Activities: activitySummary, ExecutionCounts: counts, InvalidatedEdgeCount: len(frontierEdges),
-		EvidenceTiming: fixture.EvidenceTiming, EconomyState: economy.State, OutputArtifacts: 3,
+		EvidenceTiming: fixture.EvidenceTiming, EconomyState: economy.State, ExternalAuthority: fixture.ExternalAuthority, OutputArtifacts: 3,
 		Authority: Authority{RepositoryWrites: 0, LocalTestExecutions: 0, CrossProjectRequiredGates: 0},
 	}
 	return Evaluation{Plan: plan, Receipt: receipt}, nil
@@ -198,6 +198,9 @@ func priorReceiptReason(test TestSpec, receipt PriorTestReceipt, bindings InputB
 }
 
 func assessEconomy(fixture Fixture) EconomyAssessment {
+	if externalAuthorityContradiction(fixture) {
+		return EconomyAssessment{State: StateRefuted, Reason: "SELF_ASSERTED_IMMUTABILITY_CONTRADICTED_BY_PLATFORM", Comparisons: []MetricComparison{}}
+	}
 	if hasFalseNegative(fixture.Counterexamples) {
 		return EconomyAssessment{State: StateRefuted, Reason: "FALSE_NEGATIVE_COUNTEREXAMPLE_PRESENT", Comparisons: []MetricComparison{}}
 	}
@@ -242,11 +245,18 @@ func hasFalseNegative(counterexamples []Counterexample) bool {
 	return false
 }
 
+func externalAuthorityContradiction(fixture Fixture) bool {
+	authority := fixture.ExternalAuthority
+	return authority != nil && authority.ExpectedPlatformImmutable && authority.SelfAssertedImmutable && !authority.PlatformImmutable && authority.Reason == "SELF_ASSERTED_IMMUTABILITY_CONTRADICTED_BY_PLATFORM"
+}
+
 func buildActivityDecisions(fixture Fixture, tests []TestDecision, counts ExecutionCounts, evidence []EvidenceResult, economy EconomyAssessment) []ActivityDecision {
 	priorState, priorReason, priorBlocked := priorReceiptActivity(fixture, tests)
 	classificationState, classificationReason, classificationBlocked := classificationActivity(tests)
 	counterState, counterReason := StateClosed, "NO_FALSE_NEGATIVE_COUNTEREXAMPLE_OBSERVED"
-	if hasFalseNegative(fixture.Counterexamples) {
+	if externalAuthorityContradiction(fixture) {
+		counterState, counterReason = StateRefuted, "SELF_ASSERTED_IMMUTABILITY_CONTRADICTED_BY_PLATFORM"
+	} else if hasFalseNegative(fixture.Counterexamples) {
 		counterState, counterReason = StateRefuted, "FALSE_NEGATIVE_COUNTEREXAMPLE_PRESENT"
 	}
 	accountState, accountReason, accountBlocked := accountingActivity(tests, counts)

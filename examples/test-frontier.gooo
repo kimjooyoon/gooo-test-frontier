@@ -1,5 +1,6 @@
 @gooo schema="gooo/test-frontier/v1"
 # Exactly one source activity binds to each denominator cell.
+# External release authority is authoritative: a platform immutable=false result refutes a self-asserted immutable release.
 activity|1|BIND_SOURCE_DIGEST|BindSourceDigest|BINDING|VERIFY_SOURCE_DIGEST|FOUNDATION|DRIVER
 activity|2|BIND_TOOLCHAIN_DIGEST|BindToolchainDigest|BINDING|VERIFY_TOOLCHAIN_DIGEST|FOUNDATION|DRIVER
 activity|3|BIND_POLICY_DIGEST|BindPolicyDigest|BINDING|VERIFY_POLICY_DIGEST|FOUNDATION|DRIVER

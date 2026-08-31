@@ -176,7 +176,7 @@ func conformance(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "decode corpus: %v\n", err)
 		return 1
 	}
-	if corpus.Schema != frontier.CorpusSchema || corpus.CorpusID == "" || corpus.DenominatorID != "test-frontier-v1" || corpus.FixedDenominator != 12 || len(corpus.Cases) != 9 {
+	if corpus.Schema != frontier.CorpusSchema || corpus.CorpusID == "" || corpus.DenominatorID != "test-frontier-v1" || corpus.FixedDenominator != 12 || len(corpus.Cases) != 10 {
 		fmt.Fprintln(stderr, "canonical corpus header or exact case count is invalid")
 		return 1
 	}
@@ -251,6 +251,16 @@ func assertExpectations(fixture frontier.Fixture, evaluation frontier.Evaluation
 	}
 	if actual.ActivitySummary.Total != 12 {
 		return fmt.Errorf("activity denominator is %d", actual.ActivitySummary.Total)
+	}
+	if fixture.ExternalAuthority != nil {
+		if actual.ExternalAuthority == nil || actual.ExternalAuthority.PlatformImmutable != fixture.ExternalAuthority.PlatformImmutable {
+			return fmt.Errorf("external authority evidence was not preserved")
+		}
+		if fixture.ExternalAuthority.ExpectedPlatformImmutable && fixture.ExternalAuthority.SelfAssertedImmutable && !fixture.ExternalAuthority.PlatformImmutable {
+			if actual.State != frontier.StateRefuted || actual.Activities[8].State != frontier.StateRefuted || actual.Activities[8].Reason != "SELF_ASSERTED_IMMUTABILITY_CONTRADICTED_BY_PLATFORM" {
+				return fmt.Errorf("external platform contradiction did not remain REFUTED")
+			}
+		}
 	}
 	for _, activity := range actual.Activities {
 		if activity.State == frontier.StateUnknown && (activity.Unknown == nil || activity.Unknown.Stage == "" || activity.Unknown.Step == "" || activity.Unknown.Reason == "" || activity.Unknown.UnknownClass == "" || activity.Unknown.NextOperation == "" || len(activity.Unknown.BlockedBy) == 0) {

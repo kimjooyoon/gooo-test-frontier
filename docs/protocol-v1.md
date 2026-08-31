@@ -27,3 +27,10 @@ The exact comparisons are build wall time, test wall time, conformance wall
 time, and peak RSS. A missing or mismatched pair is `UNKNOWN`, never an
 improvement claim. Any counterexample that expects invalidation but observes no
 invalidation is `REFUTED` regardless of cache state or missing measurements.
+
+Release immutability has an external-authority boundary. The GitHub Releases
+API `immutable` field and the repository immutable-releases setting are
+authoritative over a manifest's self-asserted `immutable` value. A manifest
+that says `immutable=true` while the platform returns `immutable=false` is the
+canonical `SELF_ASSERTED_IMMUTABILITY_CONTRADICTED_BY_PLATFORM` `REFUTED` case;
+it cannot close through the manifest alone.

@@ -10,6 +10,11 @@ exact before/after performance pair. A cache hit is ignored unless all receipt
 identities and the terminal `PASS` result match. Reused tests carry no current
 execution duration, so reuse cannot be disguised as a zero-millisecond run.
 
+Release immutability is an external-authority check: the GitHub Releases API
+and repository immutable-releases setting outrank a manifest's self-asserted
+`immutable` value. The preserved v0.1.0 contradiction is `REFUTED`; only
+platform-confirmed v0.1.1 is success evidence.
+
 The implementation is added through the feature pull request after this
 The fixed denominator is twelve 1:1 meta activities. It has four activities in
 each proof choice (`FOUNDATION`, `COHERENCE`, `REGRESSION`) and four in each
