@@ -209,7 +209,9 @@ func assessEconomy(fixture Fixture) EconomyAssessment {
 		return economyUnknown(fixture, "EXACT_BEFORE_AFTER_PAIR_KEY_MISMATCH", "IMMUTABLE_IDENTITY_MISMATCH", []string{"performance_pair.before", "performance_pair.after"})
 	}
 	comparisons := make([]MetricComparison, 0, 4)
-	appendComparison := func(name string, before, after int64) { comparisons = append(comparisons, MetricComparison{Metric: name, Before: before, After: after, Delta: after - before, Improved: after < before}) }
+	appendComparison := func(name string, before, after int64) {
+		comparisons = append(comparisons, MetricComparison{Metric: name, Before: before, After: after, Delta: after - before, Improved: after < before})
+	}
 	appendComparison("build_wall_ms", pair.Before.BuildWallMS, pair.After.BuildWallMS)
 	appendComparison("test_wall_ms", pair.Before.TestWallMS, pair.After.TestWallMS)
 	appendComparison("conformance_wall_ms", pair.Before.ConformanceWallMS, pair.After.ConformanceWallMS)
@@ -256,24 +258,34 @@ func buildActivityDecisions(fixture Fixture, tests []TestDecision, counts Execut
 			activity.Reason = "EXACT_SEMANTIC_CHANGE_EDGES_OBSERVED"
 		case "VERIFY_PRIOR_RECEIPTS":
 			activity.State, activity.Reason = priorState, priorReason
-			if activity.State == StateUnknown { activity.Unknown = unknown(definition, activity.Reason, "PRIOR_RECEIPT_NOT_OBSERVED", "PROVIDE_IMMUTABLE_PRIOR_TEST_RECEIPT", priorBlocked) }
+			if activity.State == StateUnknown {
+				activity.Unknown = unknown(definition, activity.Reason, "PRIOR_RECEIPT_NOT_OBSERVED", "PROVIDE_IMMUTABLE_PRIOR_TEST_RECEIPT", priorBlocked)
+			}
 		case "COMPUTE_INVALIDATION_FRONTIER":
 			activity.Reason = "MINIMAL_INVALIDATION_FRONTIER_COMPUTED"
 		case "CLASSIFY_TEST_ACTIVITIES":
 			activity.State, activity.Reason = classificationState, classificationReason
-			if activity.State == StateUnknown { activity.Unknown = unknown(definition, activity.Reason, "TEST_EXECUTION_NOT_OBSERVED", "OBSERVE_AFFECTED_TEST_EXECUTION", classificationBlocked) }
+			if activity.State == StateUnknown {
+				activity.Unknown = unknown(definition, activity.Reason, "TEST_EXECUTION_NOT_OBSERVED", "OBSERVE_AFFECTED_TEST_EXECUTION", classificationBlocked)
+			}
 		case "VERIFY_COUNTEREXAMPLES":
 			activity.State, activity.Reason = counterState, counterReason
 		case "ASSESS_TEST_ECONOMY":
 			activity.State, activity.Reason, activity.Unknown = economy.State, economy.Reason, economy.Unknown
 		case "ACCOUNT_EXECUTION_STATUSES":
 			activity.State, activity.Reason = accountState, accountReason
-			if activity.State == StateUnknown { activity.Unknown = unknown(definition, activity.Reason, "EXECUTION_METRIC_NOT_OBSERVED", "OBSERVE_EXECUTED_TEST_METRICS", accountBlocked) }
+			if activity.State == StateUnknown {
+				activity.Unknown = unknown(definition, activity.Reason, "EXECUTION_METRIC_NOT_OBSERVED", "OBSERVE_EXECUTED_TEST_METRICS", accountBlocked)
+			}
 		case "EMIT_REPORT_ARTIFACTS":
 			dependencyState, dependencyReason, dependencyBlocked := aggregatePriorActivities(activities)
 			activity.State, activity.Reason = dependencyState, dependencyReason
-			if activity.State == StateUnknown { activity.Unknown = unknown(definition, activity.Reason, "DEPENDENCY_BLOCKED", "RESOLVE_UNKNOWN_TEST_FRONTIER_ACTIVITIES", dependencyBlocked) }
-			if activity.State == StateRefuted { activity.Reason = "REPORT_BLOCKED_BY_REFUTED_TEST_FRONTIER_ACTIVITY" }
+			if activity.State == StateUnknown {
+				activity.Unknown = unknown(definition, activity.Reason, "DEPENDENCY_BLOCKED", "RESOLVE_UNKNOWN_TEST_FRONTIER_ACTIVITIES", dependencyBlocked)
+			}
+			if activity.State == StateRefuted {
+				activity.Reason = "REPORT_BLOCKED_BY_REFUTED_TEST_FRONTIER_ACTIVITY"
+			}
 		}
 		activities = append(activities, activity)
 	}
@@ -282,60 +294,102 @@ func buildActivityDecisions(fixture Fixture, tests []TestDecision, counts Execut
 
 func priorReceiptActivity(fixture Fixture, tests []TestDecision) (State, string, []string) {
 	byID := map[string]TestDecision{}
-	for _, test := range tests { byID[test.TestID] = test }
+	for _, test := range tests {
+		byID[test.TestID] = test
+	}
 	refuted, unknown := []string{}, []string{}
 	receipts := map[string]PriorTestReceipt{}
-	for _, receipt := range fixture.PriorReceipts { receipts[receipt.TestID] = receipt }
+	for _, receipt := range fixture.PriorReceipts {
+		receipts[receipt.TestID] = receipt
+	}
 	for _, test := range fixture.Tests {
 		decision := byID[test.TestID]
-		if test.Policy == "SKIP" || decision.Affected { continue }
+		if test.Policy == "SKIP" || decision.Affected {
+			continue
+		}
 		receipt, ok := receipts[test.TestID]
-		if !ok { unknown = append(unknown, test.TestID); continue }
-		if !validPriorReceipt(test, receipt, fixture.InputBindings) { refuted = append(refuted, test.TestID) }
+		if !ok {
+			unknown = append(unknown, test.TestID)
+			continue
+		}
+		if !validPriorReceipt(test, receipt, fixture.InputBindings) {
+			refuted = append(refuted, test.TestID)
+		}
 	}
-	if len(refuted) > 0 { return StateRefuted, "IMMUTABLE_PRIOR_RECEIPT_CONTRADICTION", refuted }
-	if len(unknown) > 0 { return StateUnknown, "PRIOR_TEST_RECEIPT_NOT_OBSERVED", unknown }
+	if len(refuted) > 0 {
+		return StateRefuted, "IMMUTABLE_PRIOR_RECEIPT_CONTRADICTION", refuted
+	}
+	if len(unknown) > 0 {
+		return StateUnknown, "PRIOR_TEST_RECEIPT_NOT_OBSERVED", unknown
+	}
 	return StateClosed, "ALL_PRIOR_RECEIPTS_EXACT_AND_IMMUTABLE", []string{}
 }
 
 func classificationActivity(tests []TestDecision) (State, string, []string) {
 	blocked := []string{}
-	for _, test := range tests { if test.Status == "NOT_OBSERVED" { blocked = append(blocked, test.TestID) } }
-	if len(blocked) > 0 { return StateUnknown, "TEST_STATUS_NOT_OBSERVED", blocked }
+	for _, test := range tests {
+		if test.Status == "NOT_OBSERVED" {
+			blocked = append(blocked, test.TestID)
+		}
+	}
+	if len(blocked) > 0 {
+		return StateUnknown, "TEST_STATUS_NOT_OBSERVED", blocked
+	}
 	return StateClosed, "ALL_TESTS_CLASSIFIED_WITH_EXPLICIT_STATUS", []string{}
 }
 
 func accountingActivity(tests []TestDecision, counts ExecutionCounts) (State, string, []string) {
-	if counts.Total != counts.Executed+counts.Reused+counts.Skipped+counts.NotObserved { return StateRefuted, "TEST_STATUS_COUNTS_DO_NOT_SUM_TO_TOTAL", []string{} }
+	if counts.Total != counts.Executed+counts.Reused+counts.Skipped+counts.NotObserved {
+		return StateRefuted, "TEST_STATUS_COUNTS_DO_NOT_SUM_TO_TOTAL", []string{}
+	}
 	blocked := []string{}
 	for _, test := range tests {
 		switch test.Status {
 		case "EXECUTED":
-			if test.WallMS == nil || test.PeakRSSKiB == nil { blocked = append(blocked, test.TestID); continue }
-			if *test.WallMS < 0 || *test.PeakRSSKiB <= 0 { return StateRefuted, "INVALID_EXECUTED_TEST_METRICS", []string{} }
+			if test.WallMS == nil || test.PeakRSSKiB == nil {
+				blocked = append(blocked, test.TestID)
+				continue
+			}
+			if *test.WallMS < 0 || *test.PeakRSSKiB <= 0 {
+				return StateRefuted, "INVALID_EXECUTED_TEST_METRICS", []string{}
+			}
 		case "REUSED", "SKIPPED", "NOT_OBSERVED":
-			if test.WallMS != nil || test.PeakRSSKiB != nil { return StateRefuted, "NON_EXECUTED_STATUS_HAS_CURRENT_METRICS", []string{} }
+			if test.WallMS != nil || test.PeakRSSKiB != nil {
+				return StateRefuted, "NON_EXECUTED_STATUS_HAS_CURRENT_METRICS", []string{}
+			}
 		default:
 			return StateRefuted, "UNRECOGNIZED_TEST_STATUS", []string{}
 		}
 	}
-	if len(blocked) > 0 { return StateUnknown, "EXECUTED_TEST_METRICS_NOT_OBSERVED", blocked }
+	if len(blocked) > 0 {
+		return StateUnknown, "EXECUTED_TEST_METRICS_NOT_OBSERVED", blocked
+	}
 	return StateClosed, "EXACT_TEST_STATUS_COUNTS_AND_METRIC_POLICY_VERIFIED", []string{}
 }
 
 func aggregatePriorActivities(activities []ActivityDecision) (State, string, []string) {
 	refuted, unknown := []string{}, []string{}
 	for _, activity := range activities {
-		if activity.State == StateRefuted { refuted = append(refuted, activity.ID) }
-		if activity.State == StateUnknown { unknown = append(unknown, activity.ID) }
+		if activity.State == StateRefuted {
+			refuted = append(refuted, activity.ID)
+		}
+		if activity.State == StateUnknown {
+			unknown = append(unknown, activity.ID)
+		}
 	}
-	if len(refuted) > 0 { return StateRefuted, "DEPENDENCY_REFUTED", refuted }
-	if len(unknown) > 0 { return StateUnknown, "DEPENDENCY_UNKNOWN", unknown }
+	if len(refuted) > 0 {
+		return StateRefuted, "DEPENDENCY_REFUTED", refuted
+	}
+	if len(unknown) > 0 {
+		return StateUnknown, "DEPENDENCY_UNKNOWN", unknown
+	}
 	return StateClosed, "REPORT_ARTIFACTS_READY", []string{}
 }
 
 func unknown(definition ContractCell, reason, class, next string, blocked []string) *UnknownDetail {
-	if len(blocked) == 0 { blocked = []string{definition.ID} }
+	if len(blocked) == 0 {
+		blocked = []string{definition.ID}
+	}
 	return &UnknownDetail{Stage: definition.Stage, Step: definition.Step, Reason: reason, UnknownClass: class, NextOperation: next, BlockedBy: append([]string{}, blocked...)}
 }
 
@@ -343,10 +397,14 @@ func countTestStatuses(tests []TestDecision) ExecutionCounts {
 	counts := ExecutionCounts{Total: len(tests)}
 	for _, test := range tests {
 		switch test.Status {
-		case "EXECUTED": counts.Executed++
-		case "REUSED": counts.Reused++
-		case "SKIPPED": counts.Skipped++
-		case "NOT_OBSERVED": counts.NotObserved++
+		case "EXECUTED":
+			counts.Executed++
+		case "REUSED":
+			counts.Reused++
+		case "SKIPPED":
+			counts.Skipped++
+		case "NOT_OBSERVED":
+			counts.NotObserved++
 		}
 	}
 	return counts
@@ -355,14 +413,29 @@ func countTestStatuses(tests []TestDecision) ExecutionCounts {
 func summarizeActivities(activities []ActivityDecision) ActivitySummary {
 	summary := ActivitySummary{Total: len(activities)}
 	for _, activity := range activities {
-		switch activity.State { case StateClosed: summary.Closed++; case StateUnknown: summary.Unknown++; case StateRefuted: summary.Refuted++ }
+		switch activity.State {
+		case StateClosed:
+			summary.Closed++
+		case StateUnknown:
+			summary.Unknown++
+		case StateRefuted:
+			summary.Refuted++
+		}
 	}
 	return summary
 }
 
 func aggregateState(activities []ActivityDecision) (State, string) {
-	for _, activity := range activities { if activity.State == StateRefuted { return StateRefuted, "REFUTED: known contradiction takes precedence over UNKNOWN and CLOSED." } }
-	for _, activity := range activities { if activity.State == StateUnknown { return StateUnknown, "UNKNOWN: missing evidence is preserved with its minimal causal frontier." } }
+	for _, activity := range activities {
+		if activity.State == StateRefuted {
+			return StateRefuted, "REFUTED: known contradiction takes precedence over UNKNOWN and CLOSED."
+		}
+	}
+	for _, activity := range activities {
+		if activity.State == StateUnknown {
+			return StateUnknown, "UNKNOWN: missing evidence is preserved with its minimal causal frontier."
+		}
+	}
 	return StateClosed, "CLOSED: every test status and exact evidence relation is accounted for."
 }
 

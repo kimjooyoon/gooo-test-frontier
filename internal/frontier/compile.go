@@ -151,10 +151,10 @@ func ValidateFixture(fixture Fixture) error {
 		return errors.New("INVALID_FIXTURE_HEADER")
 	}
 	for name, value := range map[string]string{
-		"source_digest": fixture.InputBindings.SourceDigest,
-		"toolchain_digest": fixture.InputBindings.ToolchainDigest,
-		"policy_digest": fixture.InputBindings.PolicyDigest,
-		"test_inventory_digest": fixture.InputBindings.TestInventoryDigest,
+		"source_digest":                fixture.InputBindings.SourceDigest,
+		"toolchain_digest":             fixture.InputBindings.ToolchainDigest,
+		"policy_digest":                fixture.InputBindings.PolicyDigest,
+		"test_inventory_digest":        fixture.InputBindings.TestInventoryDigest,
 		"semantic_change_graph_digest": fixture.InputBindings.SemanticChangeGraphDigest,
 	} {
 		if err := ValidateDigest(value); err != nil {
