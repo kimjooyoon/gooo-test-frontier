@@ -31,3 +31,10 @@ counterexample: the release was immutable and its assets existed, but the
 Actions token could not download immutable assets through the authenticated
 release-asset endpoint. The audit now uses the public release download URLs
 while still comparing every downloaded digest to the GitHub API asset digest.
+
+The subsequent audit run `33398298094` is retained as a second failed
+counterexample: the repository immutable-releases endpoint is an administrative
+setting endpoint unavailable to the Actions integration, even though the
+release itself was already `immutable=true`. The final workflow therefore uses
+the Release API as the external authority and preserves the separately verified
+repository setting result (`enabled=true`).

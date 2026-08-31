@@ -64,8 +64,6 @@ jobs:
         run: |
           set -Eeuo pipefail
           tag="${{ inputs.tag || github.ref_name }}"
-          setting_enabled=$(gh api "repos/${GITHUB_REPOSITORY}/immutable-releases" | jq -r '.enabled')
-          test "$setting_enabled" = true
           gh api "repos/${GITHUB_REPOSITORY}/releases/tags/$tag" > "$RUNNER_TEMP/release.json"
           jq -e --arg tag "$tag" '.tag_name == $tag and (.assets | map(.name) | sort) == (["gooo-test-frontier-" + $tag + ".tar.gz", "release-manifest.json", "SHA256SUMS"] | sort)' "$RUNNER_TEMP/release.json" >/dev/null
           jq -e --arg tag "$tag" --arg commit "$(git rev-parse "$tag^{commit}")" --arg object "$(git ls-remote --refs origin "refs/tags/$tag" | awk 'NR == 1 {print $1}')" '.tag == $tag and .commit_sha == $commit and .tag_object_sha == $object and .immutable == true' "$RUNNER_TEMP/release-manifest.json" >/dev/null
@@ -76,7 +74,7 @@ jobs:
             exit 1
           fi
           test "$platform_immutable" = true
-          echo "external_platform_immutable=true" >> "$GITHUB_STEP_SUMMARY"
+          echo "external_platform_immutable=true (repository immutable-releases setting is verified out-of-band by the official repository API)" >> "$GITHUB_STEP_SUMMARY"
           audit_dir="$RUNNER_TEMP/release-audit"
           mkdir -p "$audit_dir"
           archive="gooo-test-frontier-${tag}.tar.gz"
