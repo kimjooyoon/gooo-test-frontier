@@ -120,7 +120,7 @@ func GenerateGo(ir SemanticIR, semanticDigest string) []byte {
 	fmt.Fprintf(&builder, "const ContractPath = %q\n", "contracts/test-frontier-denominator-v1.json")
 	fmt.Fprintf(&builder, "const ContractDigest = %q\n", ir.ContractDigest)
 	fmt.Fprintf(&builder, "const MetaActivityCount = %d\n\n", ir.MetaActivityCount)
-	builder.WriteString("type Activity struct {\n\tOrdinal int\n\tID string\n\tActivity string\n\tStage string\n\tStep string\n\tProofChoice string\n\tIndicatorClass string\n}\n\n")
+	builder.WriteString("type Activity struct {\n\tOrdinal        int\n\tID             string\n\tActivity       string\n\tStage          string\n\tStep           string\n\tProofChoice    string\n\tIndicatorClass string\n}\n\n")
 	builder.WriteString("var Activities = []Activity{\n")
 	for _, activity := range ir.Activities {
 		fmt.Fprintf(&builder, "\t{Ordinal: %d, ID: %q, Activity: %q, Stage: %q, Step: %q, ProofChoice: %q, IndicatorClass: %q},\n", activity.Ordinal, activity.ID, activity.Activity, activity.Stage, activity.Step, activity.ProofChoice, activity.IndicatorClass)

@@ -43,8 +43,10 @@ phase format bash -c '
 	files="$(git ls-files "*.go")"
 	if [ -n "$files" ]; then
 		bad="$(gofmt -l $files)"
+		gofmt -d $files > "$CI_OUTPUT_ROOT/gofmt.diff"
 	else
 		bad=""
+		: > "$CI_OUTPUT_ROOT/gofmt.diff"
 	fi
 	if [ -n "$bad" ]; then
 		echo "$bad"
@@ -98,9 +100,8 @@ peak_rss_kib="$(awk -v a="$build_rss" -v b="$test_rss" -v c="$conformance_rss" '
 
 receipt_paths="$(find "$output_root/conformance-a" -type f -name receipt.json -print)"
 if [ -n "$receipt_paths" ]; then
-	read -r total_tests tests_executed tests_reused tests_skipped tests_not_observed invalidated_edges lookup_ms verification_ms <<EOF
-$(printf '%s\n' "$receipt_paths" | xargs jq -s 'reduce .[] as $r ({total:0,executed:0,reused:0,skipped:0,not_observed:0,edges:0,lookup:0,verification:0}; .total += $r.execution_counts.total | .executed += $r.execution_counts.executed | .reused += $r.execution_counts.reused | .skipped += $r.execution_counts.skipped | .not_observed += $r.execution_counts.not_observed | .edges += $r.invalidated_edge_count | .lookup += $r.evidence_timing.lookup_ms | .verification += $r.evidence_timing.verification_ms) | [.total,.executed,.reused,.skipped,.not_observed,.edges,.lookup,.verification] | @tsv' | tr '\t' ' ')
-EOF
+	metrics="$(printf '%s\n' "$receipt_paths" | xargs jq -sr 'reduce .[] as $r ({total:0,executed:0,reused:0,skipped:0,not_observed:0,edges:0,lookup:0,verification:0}; .total += $r.execution_counts.total | .executed += $r.execution_counts.executed | .reused += $r.execution_counts.reused | .skipped += $r.execution_counts.skipped | .not_observed += $r.execution_counts.not_observed | .edges += $r.invalidated_edge_count | .lookup += $r.evidence_timing.lookup_ms | .verification += $r.evidence_timing.verification_ms) | [.total,.executed,.reused,.skipped,.not_observed,.edges,.lookup,.verification] | @tsv')"
+	read -r total_tests tests_executed tests_reused tests_skipped tests_not_observed invalidated_edges lookup_ms verification_ms <<< "$metrics"
 else
 	total_tests=0; tests_executed=0; tests_reused=0; tests_skipped=0; tests_not_observed=0; invalidated_edges=0; lookup_ms=0; verification_ms=0
 fi

@@ -35,6 +35,6 @@ func TestFalseNegativePrecedesUnknownAndClosesEconomyAsRefuted(t *testing.T) {
 }
 
 func TestNonExecutedStatusesHaveNoCurrentMetrics(t *testing.T) {
-	fixture, err := ValidateFixture(Fixture{Schema: ProtocolSchema + "/fixture/v1"})
+	err := ValidateFixture(Fixture{Schema: ProtocolSchema + "/fixture/v1"})
 	if err == nil { t.Fatal("incomplete fixture unexpectedly validated") }
 }
