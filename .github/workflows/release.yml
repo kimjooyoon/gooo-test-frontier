@@ -3,6 +3,12 @@ name: Immutable test frontier release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing annotated release tag to audit"
+        required: true
+        default: "v0.1.0"
 
 permissions:
   contents: write
@@ -15,40 +21,62 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          ref: ${{ inputs.tag || github.ref }}
       - name: Verify annotated tag identity
         shell: bash
         run: |
           set -Eeuo pipefail
-          tag_object_sha=$(git ls-remote --refs origin "refs/tags/$GITHUB_REF_NAME" | awk 'NR == 1 {print $1}')
+          tag="${{ inputs.tag || github.ref_name }}"
+          tag_object_sha=$(git ls-remote --refs origin "refs/tags/$tag" | awk 'NR == 1 {print $1}')
           test -n "$tag_object_sha"
           test "$(git cat-file -t "$tag_object_sha")" = "tag"
-          test "$(git rev-parse "$tag_object_sha^{commit}")" = "$GITHUB_SHA"
+          test "$(git rev-parse "$tag_object_sha^{commit}")" = "$(git rev-parse "$tag^{commit}")"
           echo "tag_object_sha=$tag_object_sha" >> "$GITHUB_STEP_SUMMARY"
       - name: Build immutable source assets
         id: asset
         shell: bash
         run: |
           set -Eeuo pipefail
-          tag_object_sha=$(git ls-remote --refs origin "refs/tags/$GITHUB_REF_NAME" | awk 'NR == 1 {print $1}')
-          commit_sha=$(git rev-parse HEAD)
-          archive="gooo-test-frontier-${GITHUB_REF_NAME}.tar.gz"
-          git archive --format=tar.gz --prefix="gooo-test-frontier-${GITHUB_REF_NAME}/" "$commit_sha" > "$RUNNER_TEMP/$archive"
+          tag="${{ inputs.tag || github.ref_name }}"
+          tag_object_sha=$(git ls-remote --refs origin "refs/tags/$tag" | awk 'NR == 1 {print $1}')
+          commit_sha=$(git rev-parse "$tag^{commit}")
+          archive="gooo-test-frontier-${tag}.tar.gz"
+          git archive --format=tar.gz --prefix="gooo-test-frontier-${tag}/" "$commit_sha" > "$RUNNER_TEMP/$archive"
           asset_digest="sha256:$(sha256sum "$RUNNER_TEMP/$archive" | awk '{print $1}')"
           asset_size=$(wc -c < "$RUNNER_TEMP/$archive" | tr -d ' ')
           printf '%s  %s\n' "$asset_digest" "$archive" > "$RUNNER_TEMP/SHA256SUMS"
-          jq -S -n --arg tag "$GITHUB_REF_NAME" --arg tag_object_sha "$tag_object_sha" --arg commit_sha "$commit_sha" --arg archive "$archive" --arg asset_digest "$asset_digest" --argjson asset_size "$asset_size" '{schema:"gooo/test-frontier/release-manifest/v1",tag:$tag,tag_object_sha:$tag_object_sha,commit_sha:$commit_sha,archive:$archive,asset_size_bytes:$asset_size,asset_digest:$asset_digest,immutable:true}' > "$RUNNER_TEMP/release-manifest.json"
+          jq -S -n --arg tag "$tag" --arg tag_object_sha "$tag_object_sha" --arg commit_sha "$commit_sha" --arg archive "$archive" --arg asset_digest "$asset_digest" --argjson asset_size "$asset_size" '{schema:"gooo/test-frontier/release-manifest/v1",tag:$tag,tag_object_sha:$tag_object_sha,commit_sha:$commit_sha,archive:$archive,asset_size_bytes:$asset_size,asset_digest:$asset_digest,immutable:true}' > "$RUNNER_TEMP/release-manifest.json"
           echo "archive=$archive" >> "$GITHUB_OUTPUT"
       - name: Publish immutable release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -Eeuo pipefail
-          gh release create "$GITHUB_REF_NAME" --verify-tag --title "gooo-test-frontier $GITHUB_REF_NAME" --notes "Immutable source asset bound to annotated tag object $(git rev-parse "$GITHUB_REF_NAME")." "$RUNNER_TEMP/${{ steps.asset.outputs.archive }}" "$RUNNER_TEMP/SHA256SUMS" "$RUNNER_TEMP/release-manifest.json"
+          tag="${{ inputs.tag || github.ref_name }}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "release already exists; auditing without rewriting it"
+          else
+            gh release create "$tag" --verify-tag --title "gooo-test-frontier $tag" --notes "Immutable source asset bound to annotated tag object $(git rev-parse "$tag")." "$RUNNER_TEMP/${{ steps.asset.outputs.archive }}" "$RUNNER_TEMP/SHA256SUMS" "$RUNNER_TEMP/release-manifest.json"
+          fi
       - name: Audit release identity and digests
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -Eeuo pipefail
-          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${GITHUB_REF_NAME}" > "$RUNNER_TEMP/release.json"
-          jq -e --arg tag "$GITHUB_REF_NAME" '.tag_name == $tag and .target_commitish != "" and .immutable == true' "$RUNNER_TEMP/release.json" >/dev/null
+          tag="${{ inputs.tag || github.ref_name }}"
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/$tag" > "$RUNNER_TEMP/release.json"
+          jq -e --arg tag "$tag" '.tag_name == $tag and (.assets | map(.name) | sort) == (["gooo-test-frontier-" + $tag + ".tar.gz", "release-manifest.json", "SHA256SUMS"] | sort)' "$RUNNER_TEMP/release.json" >/dev/null
+          jq -e --arg tag "$tag" --arg commit "$(git rev-parse "$tag^{commit}")" --arg object "$(git ls-remote --refs origin "refs/tags/$tag" | awk 'NR == 1 {print $1}')" '.tag == $tag and .commit_sha == $commit and .tag_object_sha == $object and .immutable == true' "$RUNNER_TEMP/release-manifest.json" >/dev/null
+          audit_dir="$RUNNER_TEMP/release-audit"
+          mkdir -p "$audit_dir"
+          gh release download "$tag" --dir "$audit_dir" --clobber
+          archive="gooo-test-frontier-${tag}.tar.gz"
+          declared_digest="$(awk -v name="$archive" '$2 == name {print $1}' "$audit_dir/SHA256SUMS")"
+          test "$declared_digest" = "sha256:$(sha256sum "$audit_dir/$archive" | awk '{print $1}')"
+          test "sha256:$(sha256sum "$audit_dir/$archive" | awk '{print $1}')" = "$(jq -r '.asset_digest' "$RUNNER_TEMP/release-manifest.json")"
+          for asset in "$archive" SHA256SUMS release-manifest.json; do
+            expected="$(jq -r --arg name "$asset" '.assets[] | select(.name == $name) | .digest' "$RUNNER_TEMP/release.json")"
+            actual="sha256:$(sha256sum "$audit_dir/$asset" | awk '{print $1}')"
+            test "$expected" = "$actual"
+          done
           cat "$RUNNER_TEMP/release-manifest.json" >> "$GITHUB_STEP_SUMMARY"
